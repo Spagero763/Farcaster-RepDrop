@@ -12,7 +12,7 @@ const ConfettiPiece = ({ style }: { style: React.CSSProperties }) => (
   <div className="absolute w-2 h-2 rounded-full" style={style} />
 );
 
-export default function SuccessPage() {
+const ConfettiAnimation = () => {
   const [confetti, setConfetti] = useState<React.CSSProperties[]>([]);
 
   useEffect(() => {
@@ -36,12 +36,26 @@ export default function SuccessPage() {
         @keyframes fall {
           to {
             top: 150vh;
-            transform: rotate(${Math.random() * 360 + 360}deg);
+            transform: rotate(720deg);
           }
         }
       `}</style>
+      {confetti.map((style, index) => <ConfettiPiece key={index} style={style} />)}
+    </>
+  );
+};
+
+
+export default function SuccessPage() {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+  return (
       <div className="container relative overflow-hidden py-10 flex justify-center">
-        {confetti.map((style, index) => <ConfettiPiece key={index} style={style} />)}
+        {isClient && <ConfettiAnimation />}
         <Card className="w-full max-w-md text-center z-10">
           <CardHeader className="items-center">
             <div className="p-4 bg-green-500/10 rounded-full">
@@ -65,6 +79,5 @@ export default function SuccessPage() {
           </CardFooter>
         </Card>
       </div>
-    </>
   );
 }
