@@ -11,6 +11,8 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { config } from 'dotenv';
+config({ path: '.env' });
 
 const VerifyCastSummarizationInputSchema = z.object({
   castHash: z.string().describe('The hash of the Farcaster cast to verify.'),
