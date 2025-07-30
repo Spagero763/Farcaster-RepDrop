@@ -18,12 +18,7 @@ type VerificationResult = {
 // Server action to securely verify the cast
 export async function verifyAction(data: FormValues): Promise<VerificationResult> {
   try {
-    const neynarApiKey = process.env.NEYNAR_API_KEY;
-    if (!neynarApiKey) {
-      console.error('NEYNAR_API_KEY is not set in the environment.');
-      return { isValid: false, summary: 'Server configuration error: NEYNAR_API_KEY is missing.' };
-    }
-    return await verifyCastSummarization({ castHash: data.castHash, neynarApiKey });
+    return await verifyCastSummarization({ castHash: data.castHash });
   } catch (error) {
     console.error('Verification failed:', error);
     return { isValid: false, summary: 'An unexpected error occurred during verification.' };

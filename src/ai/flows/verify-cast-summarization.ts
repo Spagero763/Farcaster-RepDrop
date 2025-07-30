@@ -15,7 +15,6 @@ import axios from 'axios';
 
 const VerifyCastSummarizationInputSchema = z.object({
   castHash: z.string().describe('The hash of the Farcaster cast to verify.'),
-  neynarApiKey: z.string().describe('The API key for Neynar.'),
 });
 export type VerifyCastSummarizationInput = z.infer<typeof VerifyCastSummarizationInputSchema>;
 
@@ -30,17 +29,16 @@ export async function verifyCastSummarization(input: VerifyCastSummarizationInpu
   return verifyCastSummarizationFlow(input);
 }
 
-const castVerificationPrompt = ai.definePrompt({
-  name: 'castVerificationPrompt',
-  input: {schema: VerifyCastSummarizationInputSchema},
-  output: {schema: z.object({isValid: z.boolean(), summary: z.string()})},
-  prompt: `You are a Farcaster cast verifier. You must determine whether a given cast hash corresponds to a valid cast, and provide a short summary of the cast's content.
-
-  Cast Hash: {{{castHash}}}
-  Neynar API Key: {{{neynarApiKey}}}
-  
-  Respond with JSON object that contains whether the cast is valid, and a short summary. Return valid JSON.
-  `,
+const castSummarizationPrompt = ai.definePrompt({
+    name: 'castSummarizationPrompt',
+    input: {schema: z.object({ castText: z.string() })},
+    output: {schema: z.object({ summary: z.string() })},
+    prompt: `Summarize the following Farcaster cast content in a single, concise sentence.
+    
+    Cast Content: {{{castText}}}
+    
+    Respond with a JSON object that contains the summary.
+    `,
 });
 
 const verifyCastSummarizationFlow = ai.defineFlow(
@@ -51,32 +49,38 @@ const verifyCastSummarizationFlow = ai.defineFlow(
   },
   async input => {
     try {
+      const apiKey = process.env.NEYNAR_API_KEY;
+      if (!apiKey) {
+        throw new Error('NEYNAR_API_KEY is not set.');
+      }
+
       const res = await axios.get(`https://api.neynar.com/v2/farcaster/cast?identifier=${input.castHash}&type=hash`, {
-        headers: { 'api_key': input.neynarApiKey },
+        headers: { 'api_key': apiKey },
       });
 
-      const isValid = !!res.data.cast;
+      const cast = res.data.cast;
+      const isValid = !!cast;
 
       if (isValid) {
-        const {output} = await castVerificationPrompt(input);
+        const {output} = await castSummarizationPrompt({ castText: cast.text });
 
         return {
-          isValid: output?.isValid ?? false,
+          isValid: true,
           summary: output?.summary ?? 'No summary available.',
           progress: 'Generated cast verification summary.'
         };
       } else {
         return {
           isValid: false,
-          summary: 'Invalid cast hash.',
+          summary: 'Invalid cast hash or cast not found.',
           progress: 'Cast hash is invalid.'
         };
       }
     } catch (error: any) {
-      console.error('Error verifying cast:', error.message);
+      console.error('Error verifying cast:', error.response?.data || error.message);
       return {
         isValid: false,
-        summary: `Error verifying cast: ${error.message}`,
+        summary: `Error verifying cast: ${error.response?.data?.message || error.message}`,
         progress: 'An error occurred during cast verification.'
       };
     }
