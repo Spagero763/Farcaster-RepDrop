@@ -51,7 +51,7 @@ const verifyCastSummarizationFlow = ai.defineFlow(
   },
   async input => {
     try {
-      const apiKey = process.env.NEYNAR_API_KEY;
+      const apiKey = process.env.NEXT_PUBLIC_NEYNAR_API_KEY;
       if (!apiKey) {
         throw new Error('NEYNAR_API_KEY is not set.');
       }
