@@ -12,7 +12,6 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { config } from 'dotenv';
-config({ path: '.env' });
 
 const VerifyCastSummarizationInputSchema = z.object({
   castHash: z.string().describe('The hash of the Farcaster cast to verify.'),
@@ -49,6 +48,7 @@ const verifyCastSummarizationFlow = ai.defineFlow(
     outputSchema: VerifyCastSummarizationOutputSchema,
   },
   async input => {
+    config({ path: '.env' });
     try {
       const apiKey = process.env.NEYNAR_API_KEY;
       if (!apiKey) {
