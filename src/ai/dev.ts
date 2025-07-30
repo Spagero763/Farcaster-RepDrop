@@ -1,4 +1,4 @@
 import { config } from 'dotenv';
-config({ path: '.env.local' });
+config({ path: '.env' });
 
 import '@/ai/flows/verify-cast-summarization.ts';

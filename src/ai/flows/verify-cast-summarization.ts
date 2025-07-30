@@ -11,7 +11,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import axios from 'axios';
 
 const VerifyCastSummarizationInputSchema = z.object({
   castHash: z.string().describe('The hash of the Farcaster cast to verify.'),
@@ -54,11 +53,21 @@ const verifyCastSummarizationFlow = ai.defineFlow(
         throw new Error('NEYNAR_API_KEY is not set.');
       }
 
-      const res = await axios.get(`https://api.neynar.com/v2/farcaster/cast?identifier=${input.castHash}&type=hash`, {
-        headers: { 'api_key': apiKey },
+      const response = await fetch(`https://api.neynar.com/v2/farcaster/cast?identifier=${input.castHash}&type=hash`, {
+        method: 'GET',
+        headers: { 
+          'api_key': apiKey,
+          'Content-Type': 'application/json'
+        },
       });
 
-      const cast = res.data.cast;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(`Request failed with status code ${response.status}: ${errorData.message}`);
+      }
+      
+      const res = await response.json();
+      const cast = res.cast;
       const isValid = !!cast;
 
       if (isValid) {
@@ -77,10 +86,10 @@ const verifyCastSummarizationFlow = ai.defineFlow(
         };
       }
     } catch (error: any) {
-      console.error('Error verifying cast:', error.response?.data || error.message);
+      console.error('Error verifying cast:', error.message);
       return {
         isValid: false,
-        summary: `Error verifying cast: ${error.response?.data?.message || error.message}`,
+        summary: `Error verifying cast: ${error.message}`,
         progress: 'An error occurred during cast verification.'
       };
     }
