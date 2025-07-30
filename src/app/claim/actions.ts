@@ -7,7 +7,7 @@ import { verifyCastSummarization } from '@/ai/flows/verify-cast-summarization';
 const formSchema = z.object({
   castHash: z.string().startsWith('0x', { message: 'Hash must start with 0x' }).min(10, { message: 'Hash seems too short' }),
 });
-export type FormValues = z.infer<typeof typeName>;
+export type FormValues = z.infer<typeof formSchema>;
 
 
 type VerificationResult = {
@@ -21,7 +21,7 @@ export async function verifyAction(data: FormValues): Promise<VerificationResult
     const neynarApiKey = process.env.NEYNAR_API_KEY;
     if (!neynarApiKey) {
       console.error('NEYNAR_API_KEY is not set in the environment.');
-      return { isValid: false, summary: 'Server configuration error.' };
+      return { isValid: false, summary: 'Server configuration error: NEYNAR_API_KEY is missing.' };
     }
     return await verifyCastSummarization({ castHash: data.castHash, neynarApiKey });
   } catch (error) {
