@@ -49,7 +49,6 @@ export default function ClaimPage() {
       toast({
         title: "Cast Verified!",
         description: `Your calculated reputation score is ${score}. You can now claim your reputation.`,
-        variant: 'default',
       });
     } else {
       setVerificationStatus('failed');
@@ -74,7 +73,7 @@ export default function ClaimPage() {
   if (claimError) {
     toast({
       title: "Claiming Error",
-      description: claimError.message.includes('already claimed') ? "You have already claimed your reputation." : "An error occurred during the claim process.",
+      description: claimError.message.includes('Already claimed') ? "You have already claimed your reputation." : "An error occurred during the claim process.",
       variant: 'destructive',
     });
   }
