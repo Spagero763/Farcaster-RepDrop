@@ -51,6 +51,7 @@ export default function ClaimPage() {
 
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'verifying' | 'verified' | 'failed'>('idle');
   const [verificationSummary, setVerificationSummary] = useState('');
+  const [reputationScore, setReputationScore] = useState(0);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -63,9 +64,11 @@ export default function ClaimPage() {
     if (result.isValid) {
       setVerificationStatus('verified');
       setVerificationSummary(result.summary);
+      const score = Math.min(Math.floor(result.summary.length / 10), 100);
+      setReputationScore(score);
       toast({
         title: "Cast Verified!",
-        description: "You can now claim your reputation.",
+        description: `Your calculated reputation score is ${score}. You can now claim your reputation.`,
         variant: 'default',
       });
     } else {
@@ -80,6 +83,7 @@ export default function ClaimPage() {
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
       functionName: 'claimReputation',
+      args: [BigInt(reputationScore)],
     });
   };
 
@@ -139,8 +143,9 @@ export default function ClaimPage() {
                 <div className="p-3 rounded-md bg-secondary text-secondary-foreground flex items-start gap-3">
                   <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
                   <div>
-                    <h4 className="font-semibold">Cast Summary</h4>
+                    <h4 className="font-semibold">Cast Summary & Reputation</h4>
                     <p className="text-sm text-muted-foreground">{verificationSummary}</p>
+                    <p className="text-sm font-bold mt-2">Reputation Score: {reputationScore}</p>
                   </div>
                 </div>
               )}
@@ -154,7 +159,7 @@ export default function ClaimPage() {
               ) : (
                 <Button onClick={handleClaim} disabled={isClaiming || isConfirming} className="w-full">
                   {(isClaiming || isConfirming) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {isClaiming ? 'Claiming...' : isConfirming ? 'Confirming...' : 'Claim Reputation'}
+                  {isClaiming ? 'Claiming...' : isConfirming ? 'Confirming...' : `Claim ${reputationScore} Reputation`}
                 </Button>
               )}
             </CardFooter>
