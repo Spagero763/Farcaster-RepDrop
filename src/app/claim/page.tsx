@@ -54,10 +54,23 @@ export default function ClaimPage() {
       setVerificationStatus('failed');
       setVerificationSummary(result.summary || 'Invalid or non-existent cast hash.');
       form.setError('castHash', { type: 'manual', message: result.summary || 'Invalid cast.' });
+      toast({
+        title: "Verification Failed",
+        description: result.summary,
+        variant: 'destructive',
+      });
     }
   };
 
   const handleClaim = () => {
+    if (reputationScore <= 0) {
+      toast({
+        title: "Invalid Reputation",
+        description: "Reputation score must be greater than zero to claim.",
+        variant: 'destructive',
+      });
+      return;
+    }
     writeContract({
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
@@ -73,7 +86,7 @@ export default function ClaimPage() {
   if (claimError) {
     toast({
       title: "Claiming Error",
-      description: claimError.message.includes('Already claimed') ? "You have already claimed your reputation." : "An error occurred during the claim process.",
+      description: claimError.message.includes('Already claimed') ? "You have already claimed your reputation." : claimError.message.includes("Invalid reputation") ? "Reputation score must be greater than zero." : "An error occurred during the claim process.",
       variant: 'destructive',
     });
   }
