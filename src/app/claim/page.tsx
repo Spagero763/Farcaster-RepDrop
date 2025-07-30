@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -6,45 +7,24 @@ import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from '@/lib/contract';
-import { verifyCastSummarization } from '@/ai/flows/verify-cast-summarization';
+import { verifyAction, type FormValues } from './actions';
+
 
 const formSchema = z.object({
   castHash: z.string().startsWith('0x', { message: 'Hash must start with 0x' }).min(10, { message: 'Hash seems too short' }),
 });
-type FormValues = z.infer<typeof formSchema>;
-
-type VerificationResult = {
-  isValid: boolean;
-  summary: string;
-};
-
-// Server action to securely verify the cast
-async function verifyAction(data: FormValues): Promise<VerificationResult> {
-  'use server';
-  try {
-    const neynarApiKey = process.env.NEYNAR_API_KEY;
-    if (!neynarApiKey) {
-      console.error('NEYNAR_API_KEY is not set in the environment.');
-      return { isValid: false, summary: 'Server configuration error.' };
-    }
-    return await verifyCastSummarization({ castHash: data.castHash, neynarApiKey });
-  } catch (error) {
-    console.error('Verification failed:', error);
-    return { isValid: false, summary: 'An unexpected error occurred during verification.' };
-  }
-}
 
 export default function ClaimPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { isConnected, address } = useAccount();
+  const { isConnected } = useAccount();
   const { data: hash, writeContract, isPending: isClaiming, error: claimError } = useWriteContract();
   
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
